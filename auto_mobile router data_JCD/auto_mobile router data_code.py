@@ -5,10 +5,10 @@ import pytesseract
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image
-from selenium.common.exceptions import NoAlertPresentException
-
-time.sleep(5)
+from selenium.common.exceptions import TimeoutException
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Users\jaehoon.jang\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
 
@@ -19,25 +19,26 @@ chrome_options = Options()
 # chrome_options.add_argument("--window-size=1920,1080")
 
 prefs = {
-    "safebrowsing.enabled": True,
+    "safebrowsing.enabled": False,
     "safebrowsing.disable_download_protection": True,
+    "profile.default_content_setting_values.automatic_downloads": 1,
+    "profile.password_manager_enabled": False,
     "download.prompt_for_download": False,
 }
 chrome_options.add_experimental_option("prefs", prefs)
 
-chrome_options.add_argument("--safebrowsing-disable-download-protection")
-chrome_options.add_argument("--ignore-certificate-errors")
+chrome_options.add_argument("--allow-running-insecure-content")
+chrome_options.add_argument("--unsafely-treat-insecure-origin-as-secure=http://nms.iproad.co.kr/ipr-400/dashboard")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get('http://nms.iproad.co.kr/ipr-400/dashboard')
-
-time.sleep(5)
+wait = WebDriverWait(driver, 5)
 
 try:
-        user_id = driver.find_element(By.ID, "userID")
+        user_id = wait.until(EC.element_to_be_clickable((By.ID, "userID")))
         user_id.send_keys("jcdkorea")
 
-        user_pw = driver.find_element(By.ID, "password")
+        user_pw = wait.until(EC.element_to_be_clickable((By.ID, "password")))
         user_pw.send_keys("jcdkorea00!")
 
 except Exception as e:
@@ -53,7 +54,8 @@ while attempts < max_attempts:
         
     try:
         image_xpath = '/html/body/div[2]/div[1]/div/div/div[2]/form/div/div[3]/img'
-        captcha_img = driver.find_element(By.XPATH, image_xpath)
+        
+        captcha_img = wait.until(EC.presence_of_element_located((By.XPATH, image_xpath)))
         captcha_img.screenshot("captcha.png")
             
         img_color = cv2.imread('captcha.png')
@@ -84,32 +86,31 @@ while attempts < max_attempts:
 
         print(f"시도 {attempts}: 추출된 보안 문자: [{captcha_text}] (길이: {len(captcha_text)})")
 
+        login_btn = wait.until(EC.element_to_be_clickable((By.ID, "frmSubmit")))
+        reLoad_btn = wait.until(EC.element_to_be_clickable((By.ID, "reLoad")))
+
         if len(captcha_text) == 6:
             input_xpath = '/html/body/div[2]/div[1]/div/div/div[2]/form/div/input[2]'
-            driver.find_element(By.XPATH, input_xpath).send_keys(captcha_text)
+            captcha_input = wait.until(EC.element_to_be_clickable((By.XPATH, input_xpath)))
+            captcha_input.send_keys(captcha_text)
             print(" 6글자 인식 성공. 입력을 완료했습니다.")
-            time.sleep(2)
-
-            login_btn = driver.find_element(By.ID, "frmSubmit")
 
             try:
                 login_btn.click()
-                time.sleep(1)
 
-                alert = driver.switch_to.alert
+                alert = wait.until(EC.alert_is_present())
                 alert_text = alert.text
                 print(f"알림창 감지: {alert_text}")
 
                 alert.accept()
-                time.sleep(1)
 
                 if "보안 문자를 확인하세요" in alert_text:
                     print("보안 문자 오답! 다시 시도합니다.")
-                    time.sleep(1)
-                    driver.find_element(By.ID, "reLoad").click()
-                    driver.find_element(By.XPATH, input_xpath).clear()
+                    reLoad_btn.click()
+                    clear = wait.until(EC.element_to_be_clickable((By.XPATH, input_xpath)))
+                    clear.clear()
 
-            except NoAlertPresentException:
+            except TimeoutException:
                 print("알림창 없음. 로그인을 계속 진행합니다.")
                 break
             except Exception as e:
@@ -117,9 +118,7 @@ while attempts < max_attempts:
             
         else:
             print(f" {len(captcha_text)}글자입니다. 보안 문자를 새로고침합니다.")
-            reLoad_btn = driver.find_element(By.ID, "reLoad")
             reLoad_btn.click()
-            time.sleep(1)
 
     except Exception as e:
         print(f"오류 발생: {e}")
@@ -129,14 +128,13 @@ while attempts < max_attempts:
         driver.quit()
         break
 
-time.sleep(5)
+routerstatus = wait.until(EC.element_to_be_clickable((By.XPATH, "//a[contains(., '라우터 상태정보')]")))
+routerstatus.click()
 
-driver.find_element(By.XPATH, "//a[contains(., '라우터 상태정보')]").click()
-
-time.sleep(5)
-
-driver.find_element(By.XPATH, "/html/body/div[2]/div/div/form/div[1]/span/button").click()
+download = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[2]/div/div/form/div[1]/span/button")))
+download.click()
 print("다운로드 완료. 브라우저를 종료합니다.")
 
-time.sleep(5)
+time.sleep(3)
+
 driver.quit()
