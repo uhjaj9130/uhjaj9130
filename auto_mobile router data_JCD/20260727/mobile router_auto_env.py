@@ -30,6 +30,7 @@ IPR-400 NMS (http://nms.iproad.co.kr/ipr-400/dashboard)
          NMS_USER_PW=비밀번호
      - .env 파일은 절대 남한테 공유/커밋하지 말 것
      - Finder에서 안 보이면 Cmd+Shift+.(마침표)로 숨김 파일 표시
+     - ID,PW.env > .env 로 변경
 
 5. XB_PATH를 실제 xb 엑셀 파일 경로로 채워넣을 것
      (윈도우 경로 예: "C:\\Users\\사용자명\\Documents\\체크리스트.xlsx")
