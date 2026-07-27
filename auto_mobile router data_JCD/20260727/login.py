@@ -5,7 +5,14 @@ IPR-400 NMS (http://nms.iproad.co.kr/ipr-400/dashboard)
 ===============================================================
 설치 (실행 전 딱 한 번만 하면 됨)
 ===============================================================
-1. 파이썬 패키지 설치 (명령 프롬프트/터미널에서 실행)
+0. 파이썬(Python) 설치
+     - https://www.python.org/downloads/ 에서 Windows용 설치파일 다운로드
+     - 설치 화면 맨 아래 "Add python.exe to PATH" 체크박스 꼭 체크하고 설치
+     - 설치 후 명령 프롬프트(cmd)에서 아래로 확인
+         python --version
+         pip --version
+
+1. 파이썬 패키지 설치 (명령 프롬프트에서 실행)
      pip install selenium openpyxl xlwings
 
    * "pip"가 안 먹으면: python -m pip install selenium openpyxl xlwings
@@ -19,6 +26,9 @@ IPR-400 NMS (http://nms.iproad.co.kr/ipr-400/dashboard)
 
 4. XB_PATH를 실제 xb 엑셀 파일 경로로 채워넣을 것
      (윈도우 경로 예: "C:\\Users\\사용자명\\Documents\\체크리스트.xlsx")
+
+5. 스크립트 실행 (명령 프롬프트에서, 파일이 있는 폴더로 이동한 뒤)
+     python login.py
 ===============================================================
 
 전체 흐름
